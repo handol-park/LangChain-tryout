@@ -1,0 +1,169 @@
+:PROPERTIES:
+:header-args: :mkdirp yes :comments noweb :async
+:END:
+#+title: LangChain Tryout
+
+* Setting up the environment
+:PROPERTIES:
+:header-args: :dir devshell-00
+:END:
+
+[[id:67c61bc6-bbf0-47a1-b84a-2502887e5bcf][LangChain]] is a python package. We need a python virtual environment to play with LangChain.
+
+I'm going to use [[id:4b4299b8-e7ee-4861-aead-c73804ba2cb2][Poetry]] to manage the python virtual environment. Also, I use [[id:a3c38247-55d2-4956-856e-73ebf52b633d][Nix]] and [[id:a8824a3a-9cb2-4d58-a109-44ff94389a72][direnv]] to manage the development environment and dependencies of this project.
+
+** Adding Poetry to the development shell
+
+Add poetry to buildInputs of the devShell.
+
+#+begin_src nix :tangle devshell-00/flake.nix
+{
+  # flake-parts requires ~nixpkgs~ in inputs.
+  inputs.nixpkgs.url = "nixpkgs";
+
+  outputs = inputs@{ flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [ "aarch64-darwin" ];
+      perSystem = { pkgs, ... }: {
+        devShells.default = pkgs.mkShell {
+          buildInputs = [ pkgs.poetry ];
+        };
+      };
+    };
+}
+#+end_src
+
+Add [[devshell-00/flake.nix]] to git.
+
+#+begin_src sh
+git add flake.nix
+#+end_src
+
+#+RESULTS:
+
+Check if it works.
+
+#+begin_src sh :results output
+nix develop --command which poetry
+nix develop --command poetry --version
+#+end_src
+
+#+RESULTS:
+: /nix/store/fj1jx2dbggzppgrg6xbf05rgj58997ga-python3.10-poetry-1.4.1/bin/poetry
+: Poetry (version 1.4.1)
+
+Set up direnv to automatically activate the devShell.
+
+#+begin_src sh :tangle devshell-00/.envrc
+use flake
+#+end_src
+
+#+begin_src sh :results output
+pwd
+direnv exec . which poetry
+#+end_src
+
+#+RESULTS:
+: /Users/handolpark/Documents/Projects/LangChain-tryout/devshell-00
+: /nix/store/fj1jx2dbggzppgrg6xbf05rgj58997ga-python3.10-poetry-1.4.1/bin/poetry
+
+- Always use ~direnv exec~
+
+  #+begin_src bash :results output :session *direnv-test-00*
+  eval "$(direnv hook bash)"
+  cd /Users/handolpark/Documents/Projects/LangChain-tryout/devshell-00
+  pwd
+  which poetry
+  poetry --version
+  direnv status
+  echo $SHELL
+  echo $PATH
+  #+end_src
+
+  #+RESULTS:
+  #+begin_example
+  [mdirenv: loading ~/Documents/Projects/LangChain-tryout/devshell-00/.envrc
+  [mdirenv: using flake
+  [mdirenv: nix-direnv: using cached dev shell
+  direnv: export +AR +AS +CC +CONFIG_SHELL +CXX +HOST_PATH +IN_NIX_SHELL +LD +LD_DYLD_PATH +MACOSX_DEPLOYMENT_TARGET +NIX_BINTOOLS +NIX_BINTOOLS_WRAPPER_TARGET_HOST_aarch64_apple_darwin +NIX_BUILD_CORES +NIX_CC +NIX_CC_WRAPPER_TARGET_HOST_aarch64_apple_darwin +NIX_CFLAGS_COMPILE +NIX_COREFOUNDATION_RPATH +NIX_DONT_SET_RPATH +NIX_DONT_SET_RPATH_FOR_BUILD +NIX_ENFORCE_NO_NATIVE +NIX_HARDENING_ENABLE +NIX_IGNORE_LD_THROUGH_GCC +NIX_LDFLAGS +NIX_NO_SELF_RPATH +NIX_STORE +NM +PATH_LOCALE +RANLIB +SIZE +SOURCE_DATE_EPOCH +STRINGS +STRIP +__darwinAllowLocalNetworking +__impureHostDeps +__propagatedImpureHostDeps +__propagatedSandboxProfile +__sandboxProfile +__structuredAttrs +buildInputs +buildPhase +builder +cmakeFlags +configureFlags +depsBuildBuild +depsBuildBuildPropagated +depsBuildTarget +depsBuildTargetPropagated +depsHostHost +depsHostHostPropagated +depsTargetTarget +depsTargetTargetPropagated +doCheck +doInstallCheck +dontAddDisableDepTrack +mesonFlags +name +nativeBuildInputs +out +outputs +patches +phases +preferLocalBuild +propagatedBuildInputs +propagatedNativeBuildInputs +shell +shellHook +stdenv +strictDeps +system ~PATH
+  /Users/handolpark/Documents/Projects/LangChain-tryout/devshell-00
+  /nix/store/fj1jx2dbggzppgrg6xbf05rgj58997ga-python3.10-poetry-1.4.1/bin/poetry
+  [39;1mPoetry[39;22m (version [36m1.4.1[39m)
+  direnv exec path /etc/profiles/per-user/handolpark/bin/direnv
+  DIRENV_CONFIG /Users/handolpark/.config/direnv
+  bash_path /nix/store/ka6rabx4lz7m3habrjhh8hvbgxbz8r98-bash-5.2-p15/bin/bash
+  disable_stdin false
+  warn_timeout 5s
+  whitelist.prefix []
+  whitelist.exact map[]
+  Loaded RC path /Users/handolpark/Documents/Projects/LangChain-tryout/devshell-00/.envrc
+  Loaded watch: ".envrc" - 2023-04-08T18:57:54-07:00
+  Loaded watch: "../../../../.local/share/direnv/allow/b7eaebb56b73e9148c6bfbc503f926ebafc58cb643aa27726f14b695aa08bff2" - 2023-04-08T19:00:11-07:00
+  Loaded watch: "../../../../.direnvrc" - 1969-12-31T16:00:00-08:00
+  Loaded watch: "../../../../.config/direnv/direnvrc" - 2023-04-08T01:46:23-07:00
+  Loaded watch: "flake.nix" - 2023-04-08T18:57:54-07:00
+  Loaded watch: "flake.lock" - 2023-04-08T13:14:23-07:00
+  Loaded watch: "devshell.toml" - 1969-12-31T16:00:00-08:00
+  Loaded RC allowed false
+  Loaded RC allowPath
+  Found RC path /Users/handolpark/Documents/Projects/LangChain-tryout/devshell-00/.envrc
+  Found watch: ".envrc" - 2023-04-08T18:57:54-07:00
+  Found watch: "../../../../.local/share/direnv/allow/b7eaebb56b73e9148c6bfbc503f926ebafc58cb643aa27726f14b695aa08bff2" - 2023-04-08T19:00:11-07:00
+  Found RC allowed true
+  Found RC allowPath /Users/handolpark/.local/share/direnv/allow/b7eaebb56b73e9148c6bfbc503f926ebafc58cb643aa27726f14b695aa08bff2
+  /bin/zsh
+  /nix/store/cy78am69kj3d2r286rd7wg0cv48gqa3z-clang-wrapper-11.1.0/bin:/nix/store/nyrn55869kmx1bn1rx4mhk18irypbh1r-clang-11.1.0/bin:/nix/store/qr4zarpiaf3fk2bm01gnb33grg2nwwrh-coreutils-9.1/bin:/nix/store/v3ks390idh1xqnh3r0zlkqc86pcy7lva-cctools-binutils-darwin-wrapper-973.0.1/bin:/nix/store/nq3fp1bjaizwxv6j7gqnza6s8sdiamm8-cctools-binutils-darwin-973.0.1/bin:/nix/store/fj1jx2dbggzppgrg6xbf05rgj58997ga-python3.10-poetry-1.4.1/bin:/nix/store/qr4zarpiaf3fk2bm01gnb33grg2nwwrh-coreutils-9.1/bin:/nix/store/qv0bh98mv75sc3359pk5z667i3s16chh-findutils-4.9.0/bin:/nix/store/55089ghacw49vjxlr0bz5mqpgah4g09f-diffutils-3.9/bin:/nix/store/26ry428qjd3bp5xs1dsfk9raq5pygslg-gnused-4.9/bin:/nix/store/zmfr0yl6sab6q9rkd0shrpviq0f4i7mi-gnugrep-3.7/bin:/nix/store/vxkmgaiq1yml2194zbcsnnxs2srpnvp2-gawk-5.2.1/bin:/nix/store/diqzyr14h3l33f9p6zvraff44xxy3mhj-gnutar-1.34/bin:/nix/store/5yi8kcslpwfpjm2ba2dd6mkknasskzyq-gzip-1.12/bin:/nix/store/ajs5mldbvz89lix5rmwbnn4hm0mzp470-bzip2-1.0.8-bin/bin:/nix/store/f79s7fix4w9y807cv6s1sw4d46vy9ah8-gnumake-4.4.1/bin:/nix/store/ka6rabx4lz7m3habrjhh8hvbgxbz8r98-bash-5.2-p15/bin:/nix/store/xahr84kvrr6k30p5m4v3gjw17qxszfjk-patch-2.7.6/bin:/nix/store/idx107jx7andx62flgjm41hdkkbif35m-xz-5.4.1-bin/bin:/nix/store/s19fskgc2j241kmv1rw203nk0cki3dh6-file-5.44/bin:/opt/homebrew/Caskroom/mambaforge/base/bin:/opt/homebrew/Caskroom/mambaforge/base/condabin:/opt/homebrew/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/handolpark/.nix-profile/bin:/etc/profiles/per-user/handolpark/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/usr/sbin:/bin:/sbin
+  #+end_example
+
+  It's now working. The shell process invoked by org babel bypasses direnv somehow.
+
+** Generating the initial pyproject.toml
+
+#+begin_src bash
+direnv exec . poetry init -n --name devshell-00
+#+end_src
+
+#+RESULTS:
+
+
+** Adding ~langchain~ python package to the dependencies
+
+#+begin_src sh :results output
+direnv exec . which poetry
+#+end_src
+
+#+RESULTS:
+: /nix/store/fj1jx2dbggzppgrg6xbf05rgj58997ga-python3.10-poetry-1.4.1/bin/poetry
+
+#+begin_src bash
+direnv exec . poetry add langchain
+#+end_src
+
+#+RESULTS:
+
+** Set up OpenAI API
+
+*** Add ~openai~ to the dependencies.
+
+#+begin_src bash :results output
+direnv exec . poetry add openai
+#+end_src
+
+#+RESULTS:
+: The following packages are already present in the pyproject.toml and will be skipped:
+:
+:   • openai
+:
+: If you want to update it to the latest compatible version, you can use `poetry update package`.
+: If you prefer to upgrade it to the latest available version, you can use `poetry add package@latest`.
+:
+: Nothing to add.
+
+*** Set up the OpenAI API key
+
+I've set up the OpenAI API key in ~~/.zshenv~.
+
+#+begin_src bash
+OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+#+end_src
+

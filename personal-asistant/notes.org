@@ -1,0 +1,28 @@
+#+title: Personal Assistant using LangChain
+
+* Concept
+
+Personal assistants are a perfect application to build because they combine both of the core value props of LangChain (action taking and personalized data). In order to build a personal assistant you should understand the following concepts.
+
+1. PromptTemplate
+   Give your personal assistant some character.
+2. Memory
+   Hold a conversation (short term memory) or some concept of long term memory.
+3. Tools
+   What should it know how to do?
+4. Agent
+   What actions it should take?
+5. Agent Executor
+   Set up an environment for the agent to use those tools.
+
+** Personal assistant
+
+- They can interact with the outside world
+- They have knowledge of your data
+- They remember your interactions
+
+** Components
+
+- Agent (for interacting with the outside world)
+- Index (for giving them knowledge of your data)
+- Memory (for helping them remember interactions)

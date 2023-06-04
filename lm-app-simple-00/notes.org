@@ -1,0 +1,59 @@
+:PROPERTIES:
+:header-args: :comments noweb
+:END:
+#+title: lm-app-simple-00
+
+* Development Environment
+
+#+begin_src nix :tangle flake.nix
+{
+  # flake-parts requires ~nixpkgs~ in inputs.
+  inputs.nixpkgs.url = "nixpkgs";
+
+  outputs = inputs@{ flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [ "aarch64-darwin" ];
+      perSystem = { pkgs, ... }: {
+        devShells.default = pkgs.mkShell {
+          buildInputs = [ pkgs.poetry ];
+        };
+        devShells.poetry =
+      };
+    };
+}
+#+end_src
+
+#+begin_src bash :tangle .envrc
+use flake
+#+end_src
+
+#+begin_src toml :tangle pyproject.toml
+[tool.poetry]
+name = "lm-app-simple-00"
+version = "0.1.0"
+description = ""
+authors = ["Handol Park <handolpark12@gmail.com>"]
+readme = "README.md"
+packages = [{include = "lm-app-simple-00.py", from = "."}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+langchain = "^0.0.135"
+openai = "^0.27.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+#+end_src
+
+* App
+
+#+begin_src python :tangle lm-app-simple-00.py
+from langchain import OpenAI
+lm = OpenAI(temparature=0.9)
+text = "What is the meaning of life?"
+print(lm(text))
+#+end_src
+
+#+RESULTS:
